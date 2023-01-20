@@ -73,6 +73,8 @@ async function connect(sshConfig, redisConfig) {
                     }
                 }
             );
+            delete redisConfig.host
+            delete redisConfig.port
         });
     } catch (err) {
         throw new Error(`createIntermediateServer failed ${err}`)
@@ -83,22 +85,26 @@ async function connect(sshConfig, redisConfig) {
         port: server.address().port,
         db: redisConfig.db
     }
+    delete redisConfig.db
     if (redisConfig.password) {
         sshRedis = {
             ...sshRedis,
             password: redisConfig.password
         }
+        delete redisConfig.password
     }
     if (redisConfig.privateKey) {
         sshRedis = {
             ...sshRedis,
             privateKey: redisConfig.privateKey
         }
+        delete redisConfig.privateKey
     }
     try {
         // Redis specify the address of the intermediate server, not the server
         redis = await connectToRedis({
-            ...sshRedis
+            ...sshRedis,
+            ...redisConfig
         });
         tunnel._redis = redis
         return redis
